@@ -70,6 +70,46 @@ def get_translation_task_config():
     return task_config
 
 
+def get_model_architecture_config(model_type="RNN"):
+    if model_type != "RNN" and model_type != "Transformer":
+        raise Exception("Unknown model" + model_type)
+
+    model_arch_args = Namespace(
+        encoder_embed_dim=256,
+        encoder_ffn_embed_dim=512,
+        encoder_layers=1,
+        decoder_embed_dim=256,
+        decoder_ffn_embed_dim=1024,
+        decoder_layers=1,
+        share_decoder_input_output_embed=True,
+        dropout=0.3,
+    )
+
+    def add_transformer_args(args):
+        args.encoder_attention_heads = 4
+        args.encoder_normalize_before = True
+
+        args.decoder_attention_heads = 4
+        args.decoder_normalize_before = True
+
+        args.activation_fn = "relu"
+        args.max_source_positions = 1024
+        args.max_target_positions = 1024
+
+        # patches on default parameters for Transformer (those not set above)
+        from fairseq.models.transformer import base_architecture
+        base_architecture(args)
+
+    if model_type == "Transformer":
+        add_transformer_args(model_arch_args)
+
+    if get_general_config().use_wandb:
+        import wandb
+        wandb.config.update(vars(model_arch_args))
+
+    return model_arch_args
+
+
 def get_logger():
     config = get_general_config()
     logging.basicConfig(
