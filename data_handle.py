@@ -148,7 +148,7 @@ def data_binarize():
 
 
 # data path
-data_dir = './data/rawdata'
+data_dir = config.get_general_config().rawdatadir
 prefix = Path(data_dir).absolute()
 prefix.mkdir(parents=True, exist_ok=True)
 src_lang = 'en'

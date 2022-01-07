@@ -9,10 +9,11 @@ from argparse import Namespace
 from fairseq.tasks.translation import TranslationTask
 
 
-def get_general_config():
+def get_general_config(model_type="RNN"):
     config = Namespace(
+        rawdatadir="./data/rawdata",
         datadir="./data/data-bin",
-        savedir="./checkpoints/rnn",
+        savedir="./checkpoints/"+model_type,
         source_lang="en",
         target_lang="zh",
 
