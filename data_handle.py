@@ -155,7 +155,7 @@ src_lang = 'en'
 tgt_lang = 'zh'
 data_prefix = f'{prefix}/train_dev.raw'
 test_prefix = f'{prefix}/test.raw'
-binpath = Path(config.get_config().datadir)
+binpath = Path(config.get_general_config().datadir)
 
 
 def main():

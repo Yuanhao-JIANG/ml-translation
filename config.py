@@ -1,7 +1,15 @@
+import sys
+import logging
+from pathlib import Path
+import random
+import torch
+import numpy as np
+import argparse
 from argparse import Namespace
+from fairseq.tasks.translation import TranslationTask
 
 
-def get_config():
+def get_general_config():
     config = Namespace(
         datadir="./data/data-bin",
         savedir="./checkpoints/rnn",
@@ -41,3 +49,49 @@ def get_config():
         use_wandb=False,
     )
     return config
+
+
+def get_translation_task_config():
+    config = get_general_config()
+
+    parser = argparse.ArgumentParser()
+    TranslationTask.add_args(parser)
+    args = parser.parse_args([config.datadir, '--source-lang', config.source_lang, '--target-lang', config.target_lang,
+                              '--upsample-primary', '1'])
+
+    additional_args = Namespace(
+        train_subset="train",
+        required_seq_len_multiple=8,
+        dataset_impl="mmap",
+    )
+
+    task_config = Namespace(**vars(args), **vars(additional_args))
+
+    return task_config
+
+
+def get_logger():
+    config = get_general_config()
+    logging.basicConfig(
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level="INFO",  # "DEBUG" "WARNING" "ERROR"
+        stream=sys.stdout,
+    )
+    proj = "ml_translation"
+    logger = logging.getLogger(proj)
+    if config.use_wandb:
+        import wandb
+        wandb.init(project=proj, name=Path(config.savedir).stem, config=config)
+    return logger
+
+
+def set_seed(seed=1):
+    random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
