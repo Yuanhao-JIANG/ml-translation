@@ -77,8 +77,8 @@ def train_one_epoch(epoch_itr, model, task, criterion, optimizer, accum_steps=1)
 
 # seed = 1
 # config.set_seed(seed)
+# data_handle.main()
 
-data_handle.main()
 
 logger = config.get_logger()
 general_config = config.get_general_config()

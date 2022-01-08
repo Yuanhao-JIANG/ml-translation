@@ -2,6 +2,7 @@ import model_architecture.encoders as encoders
 import model_architecture.decoders as decoders
 import torch.nn as nn
 from fairseq.models import FairseqEncoderDecoderModel
+import config
 
 
 def main():
@@ -40,7 +41,7 @@ class Seq2Seq(FairseqEncoderDecoderModel):
         pass
 
 
-def build_model(args, task, model_type="RNN"):
+def build_model(args, task, model_type=config.get_default_model()):
     """ build a model instance based on hyperparameters """
     src_dict, tgt_dict = task.source_dictionary, task.target_dictionary
 

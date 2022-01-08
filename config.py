@@ -9,11 +9,15 @@ from argparse import Namespace
 from fairseq.tasks.translation import TranslationTask
 
 
-def get_general_config(model_type="RNN"):
+def get_default_model():
+    return "RNN"
+
+
+def get_general_config(model_type=get_default_model()):
     config = Namespace(
         rawdatadir="./data/rawdata",
         datadir="./data/data-bin",
-        savedir="./checkpoints/"+model_type,
+        savedir="./checkpoints/" + model_type,
         source_lang="en",
         target_lang="zh",
 
@@ -71,7 +75,7 @@ def get_translation_task_config():
     return task_config
 
 
-def get_model_architecture_config(model_type="RNN"):
+def get_model_architecture_config(model_type=get_default_model()):
     if model_type != "RNN" and model_type != "Transformer":
         raise Exception("Unknown model" + model_type)
 
