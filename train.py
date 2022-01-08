@@ -91,8 +91,8 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 def main():
     task = data_util.config_task()
     data_util.load_dataset(task)
-    dataloader = data_util.load_data_iterator(task, "train", general_config.start_epoch, general_config.max_tokens,
-                                              general_config.num_workers)
+    epoch_loader = data_util.load_data_iterator(task, "train", general_config.start_epoch, general_config.max_tokens,
+                                                general_config.num_workers)
 
     model_arch_args = config.get_model_architecture_config()
     model = build_model(model_arch_args, task)
@@ -110,13 +110,13 @@ def main():
     # train and validation and save
     # TODO: create validation and save method and modify following code
     # try_load_checkpoint(model, optimizer, name=general_config.resume)
-    # while dataloader.next_epoch_idx <= general_config.max_epoch:
+    # while epoch_loader.next_epoch_idx <= general_config.max_epoch:
     #     # train for one epoch
-    #     train_one_epoch(dataloader, model, task, criterion, optimizer, general_config.accum_steps)
-    #     stats = validate_and_save(model, task, criterion, optimizer, epoch=dataloader.epoch)
-    #     logger.info("end of epoch {}".format(dataloader.epoch))
-    #     dataloader = data_util.load_data_iterator(task, "train", dataloader.next_epoch_idx, general_config.max_tokens,
-    #                                               general_config.num_workers)
+    #     train_one_epoch(epoch_loader, model, task, criterion, optimizer, general_config.accum_steps)
+    #     stats = validate_and_save(model, task, criterion, optimizer, epoch=epoch_loader.epoch)
+    #     logger.info("end of epoch {}".format(epoch_loader.epoch))
+    #     epoch_loader = data_util.load_data_iterator(task, "train", epoch_loader.next_epoch_idx,
+    #                                                 general_config.max_tokens, general_config.num_workers)
 
 
 if __name__ == '__main__':
