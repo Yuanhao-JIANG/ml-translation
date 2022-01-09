@@ -80,11 +80,8 @@ def train_one_epoch(epoch_itr, model, task, criterion, optimizer, accum_steps=1)
 # seed = 1
 # config.set_seed(seed)
 # data_handle.main()
-
-
 logger = config.get_logger()
 general_config = config.get_general_config()
-
 cuda_env = utils.CudaEnvironment()
 utils.CudaEnvironment.pretty_print_cuda_env_list([cuda_env])
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -123,7 +120,7 @@ def main():
     logger.info(f"max tokens per batch = {general_config.max_tokens}, accumulate steps = {general_config.accum_steps}")
 
     # train and validation and save
-    sequence_generator = valid_test.generate_sequence_generator(model, task)
+    sequence_generator = valid_test.generate_sequence_generator(task, model)
     valid_test.try_load_checkpoint(model, logger, optimizer, name=general_config.resume)
     while epoch_loader.next_epoch_idx <= general_config.max_epoch:
         # train for one epoch
@@ -134,8 +131,38 @@ def main():
         epoch_loader = data_util.load_data_iterator(task, "train", epoch_loader.next_epoch_idx,
                                                     general_config.max_tokens, general_config.num_workers)
 
-    # checkdir = general_config.savedir
-    # torch.save(model, checkdir)
+    valid_test.try_load_checkpoint(model, logger, name="checkpoint_best.pt")
+    valid_test.validate(model, task, criterion, logger, sequence_generator, log_to_wandb=False)
+    generate_prediction(model, task, sequence_generator)
+
+
+def generate_prediction(model, task, sequence_generator, split="test", outfile="./prediction/prediction.txt"):
+    task.load_dataset(split=split, epoch=1)
+    itr = data_util.load_data_iterator(task, split, 1, general_config.max_tokens, general_config.num_workers) \
+        .next_epoch_itr(shuffle=False)
+
+    idxs = []
+    hyps = []
+
+    model.eval()
+    progress = tqdm.tqdm(itr, desc=f"prediction")
+    with torch.no_grad():
+        for i, sample in enumerate(progress):
+            # validation loss
+            sample = utils.move_to_cuda(sample, device=device)
+
+            # do inference
+            s, h, r = valid_test.inference_step(sample, model, task, sequence_generator)
+
+            hyps.extend(h)
+            idxs.extend(list(sample['id']))
+
+    # sort based on the order before preprocess
+    hyps = [x for _, x in sorted(zip(idxs, hyps))]
+
+    with open(outfile, "w") as f:
+        for h in hyps:
+            f.write(h + "\n")
 
 
 if __name__ == '__main__':

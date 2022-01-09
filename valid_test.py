@@ -81,7 +81,7 @@ def validate(model, task, criterion, logger, sequence_generator, log_to_wandb=Tr
             hyps.extend(h)
             refs.extend(r)
 
-    tok = 'zh' if task.cfg.target_lang == 'zh' else '13a'
+    tok = 'zh' if task.args.target_lang == 'zh' else '13a'
     stats["loss"] = torch.stack(stats["loss"]).mean().item()
     stats["bleu"] = sacrebleu.corpus_bleu(hyps, [refs], tokenize=tok)  # 計算BLEU score
     stats["srcs"] = srcs
@@ -120,9 +120,9 @@ def validate_and_save(model, task, criterion, optimizer, epoch, logger, sequence
             "stats": {"bleu": bleu.score, "loss": loss},
             "optim": {"step": optimizer._step}
         }
-        torch.save(check, savedir / f"checkpoint{epoch}.pt")
-        shutil.copy(savedir / f"checkpoint{epoch}.pt", savedir / f"checkpoint_last.pt")
-        logger.info(f"saved epoch checkpoint: {savedir}/checkpoint{epoch}.pt")
+        # torch.save(check, savedir / f"checkpoint{epoch}.pt")
+        # shutil.copy(savedir / f"checkpoint{epoch}.pt", savedir / f"checkpoint_last.pt")
+        # logger.info(f"saved epoch checkpoint: {savedir}/checkpoint{epoch}.pt")
 
         # save epoch samples
         with open(savedir / f"samples{epoch}.{general_config.source_lang}-{general_config.target_lang}.txt", "w") as f:
@@ -132,6 +132,7 @@ def validate_and_save(model, task, criterion, optimizer, epoch, logger, sequence
         # get best valid bleu
         if getattr(validate_and_save, "best_bleu", 0) < bleu.score:
             validate_and_save.best_bleu = bleu.score
+            # print(validate_and_save.best_bleu)
             torch.save(check, savedir / f"checkpoint_best.pt")
 
         del_file = savedir / f"checkpoint{epoch - general_config.keep_last_epochs}.pt"
@@ -142,7 +143,7 @@ def validate_and_save(model, task, criterion, optimizer, epoch, logger, sequence
 
 
 def try_load_checkpoint(model, logger, optimizer=None, name=None):
-    name = name if name else "checkpoint_last.pt"
+    name = name if name else "checkpoint_best.pt"
     checkpath = Path(general_config.savedir) / name
     if checkpath.exists():
         check = torch.load(checkpath)

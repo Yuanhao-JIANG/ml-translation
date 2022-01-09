@@ -17,7 +17,7 @@ def get_general_config(model_type=get_default_model()):
     config = Namespace(
         rawdatadir="./data/rawdata",
         datadir="./data/data-bin",
-        savedir="./checkpoints/" + model_type,
+        savedir="./saved_model/" + model_type,
         source_lang="en",
         target_lang="zh",
 
