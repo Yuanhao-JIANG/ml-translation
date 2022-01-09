@@ -1,3 +1,4 @@
+import os
 import tqdm
 import torch
 import torch.nn as nn
@@ -9,6 +10,7 @@ from torch.cuda.amp import GradScaler, autocast
 
 import config
 import data_util
+import valid_test
 import data_handle
 from model_architecture.seq2seq_model import build_model
 from model_architecture.optimization import LabelSmoothedCrossEntropyCriterion, NoamOpt
@@ -107,16 +109,33 @@ def main():
     model = model.to(device=device)
     criterion = criterion.to(device=device)
 
+    logger.info("task: {}".format(task.__class__.__name__))
+    logger.info("encoder: {}".format(model.encoder.__class__.__name__))
+    logger.info("decoder: {}".format(model.decoder.__class__.__name__))
+    logger.info("criterion: {}".format(criterion.__class__.__name__))
+    logger.info("optimizer: {}".format(optimizer.__class__.__name__))
+    logger.info(
+        "num. model params: {:,} (num. trained: {:,})".format(
+            sum(p.numel() for p in model.parameters()),
+            sum(p.numel() for p in model.parameters() if p.requires_grad),
+        )
+    )
+    logger.info(f"max tokens per batch = {general_config.max_tokens}, accumulate steps = {general_config.accum_steps}")
+
     # train and validation and save
-    # TODO: create validation and save method and modify following code
-    # try_load_checkpoint(model, optimizer, name=general_config.resume)
-    # while epoch_loader.next_epoch_idx <= general_config.max_epoch:
-    #     # train for one epoch
-    #     train_one_epoch(epoch_loader, model, task, criterion, optimizer, general_config.accum_steps)
-    #     stats = validate_and_save(model, task, criterion, optimizer, epoch=epoch_loader.epoch)
-    #     logger.info("end of epoch {}".format(epoch_loader.epoch))
-    #     epoch_loader = data_util.load_data_iterator(task, "train", epoch_loader.next_epoch_idx,
-    #                                                 general_config.max_tokens, general_config.num_workers)
+    sequence_generator = valid_test.generate_sequence_generator(model, task)
+    valid_test.try_load_checkpoint(model, logger, optimizer, name=general_config.resume)
+    while epoch_loader.next_epoch_idx <= general_config.max_epoch:
+        # train for one epoch
+        train_one_epoch(epoch_loader, model, task, criterion, optimizer, general_config.accum_steps)
+        stats = valid_test.validate_and_save(model, task, criterion, optimizer, epoch_loader.epoch, logger,
+                                             sequence_generator)
+        logger.info("end of epoch {}".format(epoch_loader.epoch))
+        epoch_loader = data_util.load_data_iterator(task, "train", epoch_loader.next_epoch_idx,
+                                                    general_config.max_tokens, general_config.num_workers)
+
+    # checkdir = general_config.savedir
+    # torch.save(model, checkdir)
 
 
 if __name__ == '__main__':
