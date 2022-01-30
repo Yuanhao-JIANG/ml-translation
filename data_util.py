@@ -1,5 +1,4 @@
 import config
-import pprint
 from fairseq import utils
 from fairseq.tasks.translation import TranslationTask
 
