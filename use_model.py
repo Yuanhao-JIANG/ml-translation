@@ -1,6 +1,7 @@
 import os
 import torch
 import argparse
+import data_util
 import data_handle
 from pathlib import Path
 import sentencepiece as spm
@@ -31,8 +32,13 @@ spm_model = spm.SentencePieceProcessor(model_file=str(spm_model_path))
 # set up task
 task_parser = argparse.ArgumentParser()
 TranslationTask.add_args(task_parser)
-task_args = task_parser.parse_args([config.data_dir])
-task = TranslationTask.setup_task(task_args)
+task_args = task_parser.parse_args(["./temp"])
+additional_task_args = Namespace(
+    dataset_impl="mmap",
+    required_seq_len_multiple=8,
+)
+task_args = Namespace(**vars(task_args), **vars(additional_task_args))
+task = None
 
 # set up model
 model_arch_args = get_model_architecture_config(config.model_type)
@@ -46,13 +52,14 @@ model.eval()
 
 
 def predict(src):
+    # write and clean data
     with open("./temp/test.raw.en", "w")as f:
         f.write(src)
     with open("./temp/test.raw.zh", "w")as f:
         f.write(src)
-
     data_handle.clean_corpus("./temp/test.raw", "en", "zh", ratio=-1, min_len=-1, max_len=-1, allow_reclean=True)
 
+    # make sub-word data
     for lang in ["en", "zh"]:
         out_path, in_path = Path(f'./temp/test.{lang}'), Path(f'./temp/test.raw.clean.{lang}')
         with open(out_path, 'w') as out_f:
@@ -62,10 +69,19 @@ def predict(src):
                     tok = spm_model.encode(line, out_type=str)
                     print(' '.join(tok), file=out_f)
 
+    # data binarization
     # TODO: try --only-source argument in the following cmd
     cmd = "python -m fairseq_cli.preprocess --source-lang en --target-lang zh " \
           "--srcdict " + config.data_dir + "/dict.en.txt --tgtdict " + config.data_dir + "/dict.zh.txt " \
           "--testpref ./temp/test --destdir ./temp --workers 2"
     os.system(cmd)
 
-    # TODO: load data and translate
+    # load and translate data
+    global task
+    if task is None:
+        task = TranslationTask.setup_task(task_args)
+    task.load_dataset(split="test", epoch=1)
+    itr = data_util.load_data_iterator(task, "test", 1, 8192, 2).next_epoch_itr(shuffle=False)
+    with torch.no_grad():
+        for i, sample in enumerate(itr):
+            pass  # TODO: translate
