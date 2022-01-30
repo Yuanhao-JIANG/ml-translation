@@ -46,8 +46,8 @@ def len_s(s, lang):
     return len(s.split())
 
 
-def clean_corpus(prefix, l1, l2, ratio=9, max_len=1000, min_len=1):
-    if Path(f'{prefix}.clean.{l1}').exists() and Path(f'{prefix}.clean.{l2}').exists():
+def clean_corpus(prefix, l1, l2, ratio=9, max_len=1000, min_len=1, allow_reclean=False):
+    if (not allow_reclean) and Path(f'{prefix}.clean.{l1}').exists() and Path(f'{prefix}.clean.{l2}').exists():
         print(f'{prefix}.clean.{l1} & {l2} exists. skipping clean.')
         return
     with open(f'{prefix}.{l1}', 'r') as l1_in_f:
