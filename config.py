@@ -87,7 +87,7 @@ def get_model_architecture_config(model_type=get_default_model()):
         decoder_ffn_embed_dim=1024,
         decoder_layers=1,
         share_decoder_input_output_embed=True,
-        dropout=0.3,
+        dropout=0,
     )
 
     def add_transformer_args(args):
