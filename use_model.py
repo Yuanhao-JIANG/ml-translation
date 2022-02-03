@@ -51,8 +51,7 @@ def process(src):
                     print(' '.join(tok), file=out_f)
 
     # data binarization
-    # -c \"\" is added to prevent logging
-    cmd = "python -c \"\" -m fairseq_cli.preprocess --source-lang en --target-lang zh " \
+    cmd = "python -m fairseq_cli.preprocess --source-lang en --target-lang zh " \
           "--srcdict " + config.data_dir + "/dict.en.txt --tgtdict " + config.data_dir + "/dict.zh.txt " \
           "--testpref ./temp/test --destdir ./temp --workers 2"
     os.system(cmd)
