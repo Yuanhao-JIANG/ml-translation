@@ -32,12 +32,13 @@ config = Namespace(
 )
 
 
-def process(src):
+def process(src, from_file=False):
     # write and clean data
-    with open("./temp/test.raw.en", "w") as f:
-        f.write(src)
-    with open("./temp/test.raw.zh", "w") as f:
-        f.write(src)
+    if not from_file:
+        with open("./temp/test.raw.en", "w") as f:
+            f.write(src)
+        with open("./temp/test.raw.zh", "w") as f:
+            f.write(src)
     data_handle.clean_corpus("./temp/test.raw", "en", "zh", ratio=-1, min_len=-1, max_len=-1, allow_reclean=True)
 
     # make sub-word data
@@ -126,8 +127,8 @@ def inference_step(sample):
     return srcs, hyps
 
 
-def translate(src):
-    process(src)
+def translate(src, from_file=False):
+    process(src, from_file)
 
     # load and translate data
     # global task
