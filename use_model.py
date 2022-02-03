@@ -1,15 +1,19 @@
 import os
 import torch
+import logging
 import argparse
 import data_util
 import data_handle
-from fairseq import utils
 from pathlib import Path
+from fairseq import utils
 import sentencepiece as spm
 from argparse import Namespace
 from config import get_model_architecture_config
-from model_architecture.seq2seq_model import build_model
 from fairseq.tasks.translation import TranslationTask
+from model_architecture.seq2seq_model import build_model
+
+
+logging.disable()
 
 # config
 config = Namespace(
@@ -47,8 +51,8 @@ def process(src):
                     print(' '.join(tok), file=out_f)
 
     # data binarization
-    # TODO: try --only-source argument in the following cmd
-    cmd = "python -m fairseq_cli.preprocess --source-lang en --target-lang zh " \
+    # -c \"\" is added to prevent logging
+    cmd = "python -c \"\" -m fairseq_cli.preprocess --source-lang en --target-lang zh " \
           "--srcdict " + config.data_dir + "/dict.en.txt --tgtdict " + config.data_dir + "/dict.zh.txt " \
           "--testpref ./temp/test --destdir ./temp --workers 2"
     os.system(cmd)
