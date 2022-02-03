@@ -14,7 +14,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 # fairseq's beam search generator
-# given model and input seqeunce, produce translation hypotheses by beam search
+# given model and input sequence, produce translation hypotheses by beam search
 def generate_sequence_generator(task, model):
     return task.build_generator([model], general_config)
 
