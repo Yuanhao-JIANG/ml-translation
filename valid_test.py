@@ -20,7 +20,7 @@ def generate_sequence_generator(task, model):
 
 
 def decode(toks, dictionary):
-    # convert from Tensor to human readable sentence
+    # convert from Tensor to human-readable sentence
     s = dictionary.string(
         toks.int().cpu(),
         general_config.post_process,
