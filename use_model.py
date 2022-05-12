@@ -41,8 +41,8 @@ def process(src, from_file=False):
         with open("./temp/test.raw.zh", "w") as f:
             f.write(src)
     else:
-        shutil.copy(src, "./temp/test.raw.en")
-        shutil.copy(src, "./temp/test.raw.zh")
+        shutil.copyfile(src, "./temp/test.raw.en")
+        shutil.copyfile(src, "./temp/test.raw.zh")
     data_handle.clean_corpus("./temp/test.raw", "en", "zh", ratio=-1, min_len=-1, max_len=-1, allow_reclean=True)
 
     # make sub-word data
@@ -131,12 +131,15 @@ def inference_step(sample):
     return srcs, hyps
 
 
-def translate(src, from_file=False):
+def translate(src, output_path="./output.txt", from_file=False, output_to_file=False):
     """
     :param src: String to be translated if from_file=False;
                 String of the path of the file to be translated if from_file=True, relative to the root directory,
                 e.g. "./testfile.txt"
+    :param output_path: String of the path of the file which the output to be written to if output_to_file if True,
+                        relative to the root directory, e.g. "./testoutput.txt"
     :param from_file: If True, translate from the given file, otherwise translated the given sentence
+    :param output_to_file: If True, write translate output to the given file, otherwise print the output
     :return: None (just print the translated result)
     """
     process(src, from_file)
@@ -154,4 +157,9 @@ def translate(src, from_file=False):
             sample = utils.move_to_cuda(sample, device=device)
             s, h = inference_step(sample)
             hyps.extend(h)
-            print(hyps)
+            if not output_to_file:
+                print(hyps)
+            else:
+                with open(output_path, "w") as f:
+                    for line in hyps:
+                        f.write(line+"\n")
