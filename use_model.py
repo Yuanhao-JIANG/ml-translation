@@ -13,7 +13,7 @@ from fairseq.tasks.translation import TranslationTask
 from model_architecture.seq2seq_model import build_model
 
 
-logging.disable()
+# logging.disable()
 
 # config
 config = Namespace(
