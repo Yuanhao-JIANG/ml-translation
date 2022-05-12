@@ -1,5 +1,6 @@
 import os
 import torch
+import shutil
 import logging
 import argparse
 import data_util
@@ -39,6 +40,9 @@ def process(src, from_file=False):
             f.write(src)
         with open("./temp/test.raw.zh", "w") as f:
             f.write(src)
+    else:
+        shutil.copy(src, "./temp/test.raw.en")
+        shutil.copy(src, "./temp/test.raw.zh")
     data_handle.clean_corpus("./temp/test.raw", "en", "zh", ratio=-1, min_len=-1, max_len=-1, allow_reclean=True)
 
     # make sub-word data
@@ -128,6 +132,13 @@ def inference_step(sample):
 
 
 def translate(src, from_file=False):
+    """
+    :param src: String to be translated if from_file=False;
+                String of the path of the file to be translated if from_file=True, relative to the root directory,
+                e.g. "./testfile.txt"
+    :param from_file: If True, translate from the given file, otherwise translated the given sentence
+    :return: None (just print the translated result)
+    """
     process(src, from_file)
 
     # load and translate data
